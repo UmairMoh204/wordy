@@ -1,7 +1,10 @@
 package wordy.ast;
 
+import java.io.PrintWriter;
 import java.util.Map;
 import java.util.Objects;
+
+import wordy.interpreter.EvaluationContext;
 
 import static wordy.ast.Utils.orderedMap;
 
@@ -71,5 +74,59 @@ public class ConditionalNode extends StatementNode {
     @Override
     protected String describeAttributes() {
         return "(operator=" + operator + ')';
+    }
+
+    public void doRun(EvaluationContext context) {
+        double leftValue = lhs.evaluate(context);
+        double rightValue = rhs.evaluate(context);
+        boolean conditionIsMet;
+        switch (operator) {
+            case EQUALS:
+                conditionIsMet = Double.compare(leftValue, rightValue) == 0;
+                break;
+            case LESS_THAN:
+                conditionIsMet = leftValue < rightValue;
+                break;
+            case GREATER_THAN:
+                conditionIsMet = leftValue > rightValue;
+                break;
+            default:
+                throw new UnsupportedOperationException("The following is an unknown operatior: "  + operator);
+        }
+        if (conditionIsMet) {
+            ifTrue.run(context);
+        }
+        else if (ifFalse != null) {
+            ifFalse.run(context);
+        }
+    }
+
+    @Override
+    public void compile(PrintWriter out) {
+        out.print("if(");
+        lhs.compile(out);
+        switch (operator) {
+            case LESS_THAN:
+                out.print(" < ");
+                break;
+            case EQUALS:
+                out.print(" = ");
+                break;
+            case GREATER_THAN:
+                out.print(" > ");
+                break;
+            default:
+                break;
+        }
+        rhs.compile(out);
+        out.print(") ");
+        ifTrue.compile(out);
+        if (ifFalse != null) {
+            out.print(" else ");
+            ifFalse.compile(out);
+        }
+        else {
+            out.print("else {");
+        }
     }
 }

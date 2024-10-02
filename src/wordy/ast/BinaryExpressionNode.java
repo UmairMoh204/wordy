@@ -1,7 +1,12 @@
 package wordy.ast;
 
+import java.io.PrintWriter;
 import java.util.Map;
 import java.util.Objects;
+
+import javax.lang.model.element.ModuleElement.DirectiveVisitor;
+
+import wordy.interpreter.EvaluationContext;
 
 import static wordy.ast.Utils.orderedMap;
 
@@ -58,5 +63,69 @@ public class BinaryExpressionNode extends ExpressionNode {
     @Override
     protected String describeAttributes() {
         return "(operator=" + operator + ')';
+    }
+
+    @Override
+    public double doEvaluate(EvaluationContext context) {
+        double leftValue = lhs.evaluate(context);
+        double rightValue = rhs.evaluate(context);
+        switch(operator) {
+            case ADDITION:
+                return leftValue + rightValue;
+            case SUBTRACTION:
+                return leftValue - rightValue;
+            case MULTIPLICATION:
+                return leftValue * rightValue;
+            case DIVISION:
+                return leftValue / rightValue;
+            case EXPONENTIATION:
+                return Math.pow(leftValue, rightValue);
+
+            default:
+                throw new UnsupportedOperationException(
+                    "The following is an unknown operator: "
+                );
+        }
+
+    }
+    @Override
+    public void compile(PrintWriter out) {
+        if (operator != Operator.EXPONENTIATION) {
+            out.print("(");
+        }
+        switch (operator) {
+            case ADDITION:
+                lhs.compile(out);
+                out.print(" + ");
+                rhs.compile(out);
+                break;
+            case SUBTRACTION:
+                lhs.compile(out);
+                out.print(" - ");
+                rhs.compile(out);
+                break;
+            case MULTIPLICATION:
+                lhs.compile(out);
+                out.print(" * ");
+                rhs.compile(out);
+                break;
+            case DIVISION:
+                lhs.compile(out);
+                out.print(" / ");
+                rhs.compile(out);
+                break;
+            case EXPONENTIATION:
+                out.print("Math.pow(");
+                lhs.compile(out);
+                out.print(", ");
+                rhs.compile(out);
+                out.print(")");
+                break;
+            default:
+                throw new UnsupportedOperationException("Unknown operator: " + operator);
+        }
+        if (operator != Operator.EXPONENTIATION) {
+            out.print(")");
+        }
     }
 }

@@ -1,5 +1,6 @@
 package wordy.ast;
 
+import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
@@ -19,6 +20,11 @@ public final class ConstantNode extends ExpressionNode {
     @Override
     public Map<String, ASTNode> getChildren() {
         return Collections.emptyMap();
+    }
+
+    @Override
+    public double doEvaluate(EvaluationContext context) {
+        return value;
     }
 
     @Override
@@ -44,5 +50,15 @@ public final class ConstantNode extends ExpressionNode {
     @Override
     protected String describeAttributes() {
         return "(value=" + value + ')';
+    }
+
+    @Override
+    public void compile (PrintWriter out) {
+        if (value == Math.floor(value)) {
+            out.print(String.format("%.1f", value));
+        }
+        else {
+            out.print(value);
+        }
     }
 }
